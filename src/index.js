@@ -115,20 +115,64 @@ app.get("/pedidos", function(request, response){
 
 app.get("/pedidos/itens", function(request, response){
 
-    /*
-    let ssql = "select c.descricao as categoria, p.* ";
-    ssql += "from produto p ";
-    ssql += "join produto_categoria c on (c.id_categoria = p.id_categoria) ";
-    ssql += "order by c.ordem";
+    let ssql = `select p.id_pedido, date_format(p.dt_pedido, '%d/%m/%Y %H:%i:%s') as dt_pedido, p.status, 
+                       u.nome as nome_usuario, u.endereco, i.id_item, o.nome, o.url_foto, i.qtd
+                  from pedido p join usuario u 
+                    on (u.id_usuario = p.id_usuario) 
+                  join pedido_item i 
+                    on (i.id_pedido = p.id_pedido) 
+                  join produto o 
+                    on (o.id_produto = i.id_produto) 
+                 where p.status <> 'F'
+                 order by p.dt_pedido `;
 
     db.query(ssql, function(err, result){
         if (err){
             return response.status(500).send(err);
         } else {
-            return response.status(200).json(result);
+
+           let id_pedidos = [];  // [1000, 1001, 1002, 1010]
+           let pedidos = []; // [ {id_pedido: 1000, itens...}, {id_pedido: 1001, itens...}]
+           let itens = [];
+
+           // Monta um array com os pedidos uma uica vez...
+           result.map((ped) => {
+               if (id_pedidos.indexOf(ped.id_pedido) < 0) {
+                   id_pedidos.push(ped.id_pedido);
+
+                   pedidos.push({
+                       id_pedido: ped.id_pedido,
+                       dt_pedido: ped.dt_pedido,
+                       status: ped.status,
+                       nome: ped.nome_usuario,
+                       endereco: ped.endereco,
+                       itens: []
+                   });
+               }
+           });
+
+           // Percorre o array acima inserindo os itens nele...
+           pedidos.map((ped) => {
+               itens = [];
+
+               result.map((pedResult) => {
+                   if (pedResult.id_pedido == ped.id_pedido) {
+                    itens.push({
+                        id_item: pedResult.id_item,
+                        nome: pedResult.nome,
+                        url_foto: pedResult.url_foto,
+                        qtd: pedResult.qtd 
+                    });
+                   }
+               });
+
+               ped.itens = itens;
+           });
+
+            return response.status(200).json(pedidos);
         }
     });   
-    */ 
+    
 });
 
 app.put("/pedidos/status/:id_pedido", function(request, response){
