@@ -54,7 +54,7 @@ app.get("/produtos/cardapio", function(request, response){
 app.post("/pedidos", function(request, response){
     
 
-    db.beginTransaction(function(err){
+//    db.beginTransaction(function(err){
 
         let ssql = `insert into pedido(id_usuario, dt_pedido, vl_subtotal, vl_entrega, vl_total, status) 
                     values(?, current_timestamp(), ?, ?, ?, 'A')`;
@@ -82,17 +82,17 @@ app.post("/pedidos", function(request, response){
 
                     db.query(ssql, [values], function(err, result){
                         if (err){
-                            db.rollback();
+//                            db.rollback();
                             response.status(500).json(err);
                         } else {
-                            db.commit();
+//                            db.commit();
                             response.status(201).json({id_pedido: id_pedido});
                         }
                     });
                 }
             }
         });  
-    });         
+//    });         
 });
 
 app.get("/pedidos", function(request, response){
